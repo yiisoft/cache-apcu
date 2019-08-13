@@ -15,13 +15,12 @@ cache:
 install:
   - travis_retry composer self-update && composer --version
   - export PATH="$HOME/.composer/vendor/bin:$PATH"
-  - travis_retry composer install --prefer-dist --no-interaction
-
   # setup PHP extension
   - |
     if [[ $TRAVIS_PHP_VERSION != nightly ]]; then
       source tests/travis/apcu-setup.sh
     fi
+  - travis_retry composer install --prefer-dist --no-interaction
 
 script:
   - |
