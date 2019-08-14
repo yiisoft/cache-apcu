@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Yiisoft\Cache\ApcuCache;
+namespace Yiisoft\Cache\Apcu;
 
 use DateInterval;
 use DateTime;

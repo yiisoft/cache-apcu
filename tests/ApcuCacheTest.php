@@ -1,12 +1,12 @@
 <?php
 
-namespace Yiisoft\Cache\ApcuCache\Tests;
+namespace Yiisoft\Cache\Apcu\Tests;
 
 use DateInterval;
 use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException;
 use ReflectionException;
-use Yiisoft\Cache\ApcuCache\ApcuCache;
+use Yiisoft\Cache\Apcu\ApcuCache;
 
 class ApcuCacheTest extends TestCase
 {
