@@ -1,6 +1,6 @@
-<?php
+<?php declare(strict_types=1);
 
-namespace Yiisoft\ApcuCache;
+namespace Yiisoft\Cache\ApcuCache;
 
 use DateInterval;
 use DateTime;
@@ -67,8 +67,8 @@ class ApcuCache implements CacheInterface
     /**
      * @noinspection PhpDocMissingThrowsInspection DateTime won't throw exception because constant string is passed as time
      *
-     * Normalizes cache TTL handling `null` value and {@see DateInterval} objects.
-     * @param int|DateInterval|null $ttl raw TTL.
+     * Normalizes cache TTL handling `null` value, strings and {@see DateInterval} objects.
+     * @param int|string|DateInterval|null $ttl raw TTL.
      * @return int|null TTL value as UNIX timestamp or null meaning infinity
      */
     private function normalizeTtl($ttl): ?int
@@ -76,6 +76,10 @@ class ApcuCache implements CacheInterface
         $normalizedTtl = $ttl;
         if ($ttl instanceof DateInterval) {
             $normalizedTtl = (new DateTime('@0'))->add($ttl)->getTimestamp();
+        }
+
+        if (is_string($normalizedTtl)) {
+            $normalizedTtl = (int)$normalizedTtl;
         }
 
         return $normalizedTtl ?? static::TTL_INFINITY;

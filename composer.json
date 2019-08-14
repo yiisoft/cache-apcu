@@ -28,12 +28,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Yiisoft\\ApcuCache\\": "src"
+            "Yiisoft\\Cache\\ApcuCache\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Yiisoft\\ApcuCache\\Tests\\": "tests"
+            "Yiisoft\\Cache\\ApcuCache\\Tests\\": "tests"
         }
     },
     "extra": {
