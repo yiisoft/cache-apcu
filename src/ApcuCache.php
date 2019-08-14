@@ -69,7 +69,7 @@ class ApcuCache implements CacheInterface
      *
      * Normalizes cache TTL handling `null` value, strings and {@see DateInterval} objects.
      * @param int|string|DateInterval|null $ttl raw TTL.
-     * @return int|null TTL value as UNIX timestamp or null meaning infinity
+     * @return int TTL value as UNIX timestamp
      */
     private function normalizeTtl($ttl): ?int
     {
