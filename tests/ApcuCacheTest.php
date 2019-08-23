@@ -161,7 +161,7 @@ class ApcuCacheTest extends TestCase
         $cache->setMultiple($data, $ttl);
 
         foreach ($data as $key => $value) {
-            $this->assertSameExceptObject($value, $cache->get($key));
+            $this->assertSameExceptObject($value, $cache->get((string)$key));
         }
     }
 
@@ -182,10 +182,11 @@ class ApcuCacheTest extends TestCase
         $cache->clear();
 
         $data = $this->getDataProviderData();
+        $keys = array_map('strval', array_keys($data));
 
         $cache->setMultiple($data);
 
-        $this->assertSameExceptObject($data, $cache->getMultiple(array_keys($data)));
+        $this->assertSameExceptObject($data, $cache->getMultiple($keys));
     }
 
     public function testDeleteMultiple(): void
@@ -194,18 +195,19 @@ class ApcuCacheTest extends TestCase
         $cache->clear();
 
         $data = $this->getDataProviderData();
+        $keys = array_map('strval', array_keys($data));
 
         $cache->setMultiple($data);
 
-        $this->assertSameExceptObject($data, $cache->getMultiple(array_keys($data)));
+        $this->assertSameExceptObject($data, $cache->getMultiple($keys));
 
-        $cache->deleteMultiple(array_keys($data));
+        $cache->deleteMultiple($keys);
 
         $emptyData = array_map(static function ($v) {
             return null;
         }, $data);
 
-        $this->assertSameExceptObject($emptyData, $cache->getMultiple(array_keys($data)));
+        $this->assertSameExceptObject($emptyData, $cache->getMultiple($keys));
     }
 
     public function testNegativeTtl(): void
@@ -313,5 +315,97 @@ class ApcuCacheTest extends TestCase
 
         $cache->setMultiple(['b' => 2]);
         $this->assertSameExceptObject(['b' => 2], $cache->getMultiple(['b']));
+    }
+
+    public function testGetInvalidKey(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $cache = $this->createCacheInstance();
+        $cache->get(1);
+    }
+
+    public function testSetInvalidKey(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $cache = $this->createCacheInstance();
+        $cache->set(1, 1);
+    }
+
+    public function testDeleteInvalidKey(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $cache = $this->createCacheInstance();
+        $cache->delete(1);
+    }
+
+    public function testGetMultipleInvalidKeys(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $cache = $this->createCacheInstance();
+        $cache->getMultiple([true]);
+    }
+
+    public function testGetMultipleInvalidKeysNotIterable(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $cache = $this->createCacheInstance();
+        $cache->getMultiple(1);
+    }
+
+    public function testSetMultipleInvalidKeysNotIterable(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $cache = $this->createCacheInstance();
+        $cache->setMultiple(1);
+    }
+
+    public function testDeleteMultipleInvalidKeys(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $cache = $this->createCacheInstance();
+        $cache->deleteMultiple([true]);
+    }
+
+    public function testDeleteMultipleInvalidKeysNotIterable(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $cache = $this->createCacheInstance();
+        $cache->deleteMultiple(1);
+    }
+
+    public function testHasInvalidKey(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $cache = $this->createCacheInstance();
+        $cache->has(1);
+    }
+
+    /*public function testTest()
+    {
+        $store = \apcu_store('123', '321');
+        $fetch = \apcu_fetch('123', $success);
+        $this->assertSame('321', $fetch);
+
+        $valuesFromCache = \apcu_fetch(['123'], $successMultiple);
+        $values = $this->normalizeAPCUoutput($valuesFromCache);
+        $this->assertSame(['123' => '321'], $values);
+    }*/
+
+    /**
+     * Normalizes keys returned from apcu_fetch in multiple mode. If one of the keys is an integer (123) or a string
+     * representation of an integer ('123') the returned key from the cache doesn't equal neither to an integer nor a
+     * string ($key !== 123 and $key !== '123'). Coping element from the returned array one by one to the new array
+     * fixes this issue.
+     * @param array $values
+     * @return array
+     */
+    private function normalizeAPCUoutput(array $values): array
+    {
+        $normalizedValues = [];
+        foreach ($values as $key => $value) {
+            $normalizedValues[$key] = $value;
+        }
+
+        return $normalizedValues;
     }
 }

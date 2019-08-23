@@ -20,12 +20,14 @@ class ApcuCache implements CacheInterface
 
     public function get($key, $default = null)
     {
+        $this->validateKey($key);
         $value = \apcu_fetch($key, $success);
         return $success ? $value : $default;
     }
 
     public function set($key, $value, $ttl = null): bool
     {
+        $this->validateKey($key);
         $ttl = $this->normalizeTtl($ttl);
         if ($ttl < 0) {
             return $this->delete($key);
@@ -35,6 +37,7 @@ class ApcuCache implements CacheInterface
 
     public function delete($key): bool
     {
+        $this->validateKey($key);
         return \apcu_delete($key);
     }
 
@@ -45,22 +48,42 @@ class ApcuCache implements CacheInterface
 
     public function getMultiple($keys, $default = null): iterable
     {
-        $values = \apcu_fetch($this->iterableToArray($keys), $success) ?: [];
-        return array_merge(array_fill_keys($this->iterableToArray($keys), $default), $values);
+        $keys = $this->iterableToArray($keys);
+        $this->validateKeys($keys);
+        $valuesFromCache = \apcu_fetch($keys, $success) ?: [];
+        $valuesFromCache = $this->normalizeAPCUoutput($valuesFromCache);
+        $values = array_fill_keys($keys, $default);
+        foreach ($values as $key => $value) {
+            $values[$key] = $valuesFromCache[(string)$key] ?? $value;
+        }
+
+        return $values;
     }
 
     public function setMultiple($values, $ttl = null): bool
     {
-        return \apcu_store($this->iterableToArray($values), null, $this->normalizeTtl($ttl)) === [];
+        $values = $this->iterableToArray($values);
+        $this->validateKeysOfValues($values);
+        [$valuesWithStringKeys, $valuesWithIntegerKeys] = $this->splitValuesByKeyType($values);
+        $ttl = $this->normalizeTtl($ttl);
+        $result = \apcu_store($valuesWithStringKeys, null, $ttl) === [];
+        foreach ($valuesWithIntegerKeys as $key => $value) {
+            $result = $result && \apcu_store((string)$key, $value, $ttl);
+        }
+
+        return $result;
     }
 
     public function deleteMultiple($keys): bool
     {
-        return \apcu_delete($this->iterableToArray($keys)) === [];
+        $keys = $this->iterableToArray($keys);
+        $this->validateKeys($keys);
+        return \apcu_delete($keys) === [];
     }
 
     public function has($key): bool
     {
+        $this->validateKey($key);
         return \apcu_exists($key);
     }
 
@@ -86,12 +109,81 @@ class ApcuCache implements CacheInterface
     }
 
     /**
-     * Converts iterable to array
-     * @param iterable $iterable
+     * Converts iterable to array. If provided value is not iterable it throws an InvalidArgumentException
+     * @param $iterable
      * @return array
      */
-    private function iterableToArray(iterable $iterable): array
+    private function iterableToArray($iterable): array
     {
+        if (!is_iterable($iterable)) {
+            throw new InvalidArgumentException('Iterable is expected, got ' . gettype($iterable));
+        }
+
         return $iterable instanceof \Traversable ? iterator_to_array($iterable) : (array)$iterable;
+    }
+
+    /**
+     * @param $key
+     */
+    private function validateKey($key): void
+    {
+        if (!\is_string($key)) {
+            throw new InvalidArgumentException('Invalid key value.');
+        }
+    }
+
+    /**
+     * @param array $keys
+     */
+    private function validateKeys(array $keys): void
+    {
+        foreach ($keys as $key) {
+            $this->validateKey($key);
+        }
+    }
+
+    /**
+     * @param array $values
+     */
+    private function validateKeysOfValues(array $values): void
+    {
+        $keys = array_map('strval', array_keys($values));
+        $this->validateKeys($keys);
+    }
+
+    /**
+     * Normalizes keys returned from apcu_fetch in multiple mode. If one of the keys is an integer (123) or a string
+     * representation of an integer ('123') the returned key from the cache doesn't equal neither to an integer nor a
+     * string ($key !== 123 and $key !== '123'). Coping element from the returned array one by one to the new array
+     * fixes this issue.
+     * @param array $values
+     * @return array
+     */
+    private function normalizeAPCUoutput(array $values): array
+    {
+        $normalizedValues = [];
+        foreach ($values as $key => $value) {
+            $normalizedValues[$key] = $value;
+        }
+
+        return $normalizedValues;
+    }
+
+    /**
+     * Splits the array of values into two arrays, one with int keys and one with string keys
+     * @param array $values
+     * @return array
+     */
+    private function splitValuesByKeyType(array $values): array
+    {
+        $withIntKeys = [];
+        foreach ($values as $key => $value) {
+            if (\is_int($key)) {
+                $withIntKeys[$key] = $value;
+                unset($values[$key]);
+            }
+        }
+
+        return [$values, $withIntKeys];
     }
 }
