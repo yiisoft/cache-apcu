@@ -51,7 +51,7 @@ class ApcuCache implements CacheInterface
         $keys = $this->iterableToArray($keys);
         $this->validateKeys($keys);
         $valuesFromCache = \apcu_fetch($keys, $success) ?: [];
-        $valuesFromCache = $this->normalizeAPCUoutput($valuesFromCache);
+        $valuesFromCache = $this->normalizeAPCuOutput($valuesFromCache);
         $values = array_fill_keys($keys, $default);
         foreach ($values as $key => $value) {
             $values[$key] = $valuesFromCache[(string)$key] ?? $value;
@@ -110,7 +110,7 @@ class ApcuCache implements CacheInterface
 
     /**
      * Converts iterable to array. If provided value is not iterable it throws an InvalidArgumentException
-     * @param $iterable
+     * @param mixed $iterable
      * @return array
      */
     private function iterableToArray($iterable): array
@@ -123,7 +123,7 @@ class ApcuCache implements CacheInterface
     }
 
     /**
-     * @param $key
+     * @param mixed $key
      */
     private function validateKey($key): void
     {
@@ -159,7 +159,7 @@ class ApcuCache implements CacheInterface
      * @param array $values
      * @return array
      */
-    private function normalizeAPCUoutput(array $values): array
+    private function normalizeAPCuOutput(array $values): array
     {
         $normalizedValues = [];
         foreach ($values as $key => $value) {

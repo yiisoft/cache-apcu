@@ -379,33 +379,4 @@ class ApcuCacheTest extends TestCase
         $cache = $this->createCacheInstance();
         $cache->has(1);
     }
-
-    /*public function testTest()
-    {
-        $store = \apcu_store('123', '321');
-        $fetch = \apcu_fetch('123', $success);
-        $this->assertSame('321', $fetch);
-
-        $valuesFromCache = \apcu_fetch(['123'], $successMultiple);
-        $values = $this->normalizeAPCUoutput($valuesFromCache);
-        $this->assertSame(['123' => '321'], $values);
-    }*/
-
-    /**
-     * Normalizes keys returned from apcu_fetch in multiple mode. If one of the keys is an integer (123) or a string
-     * representation of an integer ('123') the returned key from the cache doesn't equal neither to an integer nor a
-     * string ($key !== 123 and $key !== '123'). Coping element from the returned array one by one to the new array
-     * fixes this issue.
-     * @param array $values
-     * @return array
-     */
-    private function normalizeAPCUoutput(array $values): array
-    {
-        $normalizedValues = [];
-        foreach ($values as $key => $value) {
-            $normalizedValues[$key] = $value;
-        }
-
-        return $normalizedValues;
-    }
 }
