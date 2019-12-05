@@ -25,6 +25,11 @@ before_install:
   - phpenv config-rm xdebug.ini || echo "xdebug is not installed"
 
 install:
+    # setup PHP extension
+  - |
+    if [[ $TRAVIS_PHP_VERSION != nightly ]]; then
+      source tests/travis/apcu-setup.sh
+    fi
   - travis_retry composer self-update && composer --version
   - export PATH="$HOME/.composer/vendor/bin:$PATH"
   - travis_retry composer install $DEFAULT_COMPOSER_FLAGS
