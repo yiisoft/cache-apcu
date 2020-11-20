@@ -93,7 +93,9 @@ class ApcuCache implements CacheInterface
      * @noinspection PhpDocMissingThrowsInspection DateTime won't throw exception because constant string is passed as time
      *
      * Normalizes cache TTL handling `null` value, strings and {@see DateInterval} objects.
-     * @param int|string|DateInterval|null $ttl raw TTL.
+     *
+     * @param DateInterval|int|string|null $ttl raw TTL.
+     *
      * @return int TTL value as UNIX timestamp
      */
     private function normalizeTtl($ttl): ?int
@@ -112,7 +114,9 @@ class ApcuCache implements CacheInterface
 
     /**
      * Converts iterable to array. If provided value is not iterable it throws an InvalidArgumentException
+     *
      * @param mixed $iterable
+     *
      * @return array
      */
     private function iterableToArray($iterable): array
@@ -158,7 +162,9 @@ class ApcuCache implements CacheInterface
      * representation of an integer ('123') the returned key from the cache doesn't equal neither to an integer nor a
      * string ($key !== 123 and $key !== '123'). Coping element from the returned array one by one to the new array
      * fixes this issue.
+     *
      * @param array $values
+     *
      * @return array
      */
     private function normalizeAPCuOutput(array $values): array
@@ -173,7 +179,9 @@ class ApcuCache implements CacheInterface
 
     /**
      * Splits the array of values into two arrays, one with int keys and one with string keys
+     *
      * @param array $values
+     *
      * @return array
      */
     private function splitValuesByKeyType(array $values): array
