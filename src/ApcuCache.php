@@ -6,7 +6,23 @@ namespace Yiisoft\Cache\Apcu;
 
 use DateInterval;
 use DateTime;
+use Traversable;
 use Psr\SimpleCache\CacheInterface;
+
+use function apcu_delete;
+use function apcu_clear_cache;
+use function apcu_exists;
+use function apcu_fetch;
+use function apcu_store;
+use function array_fill_keys;
+use function array_keys;
+use function array_map;
+use function gettype;
+use function is_int;
+use function is_iterable;
+use function is_string;
+use function iterator_to_array;
+use function strpbrk;
 
 /**
  * ApcuCache provides APCu caching in terms of an application component.
@@ -16,14 +32,14 @@ use Psr\SimpleCache\CacheInterface;
  *
  * See {@see \Psr\SimpleCache\CacheInterface} for common cache operations that ApcCache supports.
  */
-class ApcuCache implements CacheInterface
+final class ApcuCache implements CacheInterface
 {
     private const TTL_INFINITY = 0;
 
     public function get($key, $default = null)
     {
         $this->validateKey($key);
-        $value = \apcu_fetch($key, $success);
+        $value = apcu_fetch($key, $success);
         return $success ? $value : $default;
     }
 
@@ -31,32 +47,39 @@ class ApcuCache implements CacheInterface
     {
         $this->validateKey($key);
         $ttl = $this->normalizeTtl($ttl);
+
         if ($ttl < 0) {
             return $this->delete($key);
         }
-        return \apcu_store($key, $value, $ttl);
+
+        return apcu_store($key, $value, $ttl);
     }
 
     public function delete($key): bool
     {
         $this->validateKey($key);
-        return \apcu_delete($key);
+        return apcu_delete($key);
     }
 
     public function clear(): bool
     {
-        return \apcu_clear_cache();
+        return apcu_clear_cache();
     }
 
     public function getMultiple($keys, $default = null): iterable
     {
         $keys = $this->iterableToArray($keys);
         $this->validateKeys($keys);
-        $valuesFromCache = \apcu_fetch($keys, $success) ?: [];
-        $valuesFromCache = $this->normalizeAPCuOutput($valuesFromCache);
         $values = array_fill_keys($keys, $default);
+
+        if (($valuesFromCache = apcu_fetch($keys)) === false) {
+            return $values;
+        }
+
+        $valuesFromCache = $this->normalizeAPCuOutput($valuesFromCache);
+
         foreach ($values as $key => $value) {
-            $values[$key] = $valuesFromCache[(string)$key] ?? $value;
+            $values[$key] = $valuesFromCache[(string) $key] ?? $value;
         }
 
         return $values;
@@ -64,56 +87,60 @@ class ApcuCache implements CacheInterface
 
     public function setMultiple($values, $ttl = null): bool
     {
+        $ttl = $this->normalizeTtl($ttl);
         $values = $this->iterableToArray($values);
         $this->validateKeysOfValues($values);
         [$valuesWithStringKeys, $valuesWithIntegerKeys] = $this->splitValuesByKeyType($values);
-        $ttl = $this->normalizeTtl($ttl);
-        $result = \apcu_store($valuesWithStringKeys, null, $ttl) === [];
-        foreach ($valuesWithIntegerKeys as $key => $value) {
-            $result = $result && \apcu_store((string)$key, $value, $ttl);
+
+        /** @psalm-suppress RedundantCondition */
+        if (apcu_store($valuesWithStringKeys, null, $ttl) !== []) {
+            return false;
         }
 
-        return $result;
+        foreach ($valuesWithIntegerKeys as $key => $value) {
+            if (!apcu_store((string) $key, $value, $ttl)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function deleteMultiple($keys): bool
     {
         $keys = $this->iterableToArray($keys);
         $this->validateKeys($keys);
-        return \apcu_delete($keys) === [];
+        return apcu_delete($keys) === [];
     }
 
     public function has($key): bool
     {
         $this->validateKey($key);
-        return \apcu_exists($key);
+        return apcu_exists($key);
     }
 
     /**
-     * @noinspection PhpDocMissingThrowsInspection DateTime won't throw exception because constant string is passed as time
-     *
      * Normalizes cache TTL handling `null` value, strings and {@see DateInterval} objects.
      *
-     * @param DateInterval|int|string|null $ttl raw TTL.
+     * @param DateInterval|int|string|null $ttl The raw TTL.
      *
-     * @return int TTL value as UNIX timestamp
+     * @return int TTL value as UNIX timestamp.
      */
-    private function normalizeTtl($ttl): ?int
+    private function normalizeTtl($ttl): int
     {
-        $normalizedTtl = $ttl;
+        if ($ttl === null) {
+            return self::TTL_INFINITY;
+        }
+
         if ($ttl instanceof DateInterval) {
-            $normalizedTtl = (new DateTime('@0'))->add($ttl)->getTimestamp();
+            return (new DateTime('@0'))->add($ttl)->getTimestamp();
         }
 
-        if (is_string($normalizedTtl)) {
-            $normalizedTtl = (int)$normalizedTtl;
-        }
-
-        return $normalizedTtl ?? static::TTL_INFINITY;
+        return (int) $ttl;
     }
 
     /**
-     * Converts iterable to array. If provided value is not iterable it throws an InvalidArgumentException
+     * Converts iterable to array. If provided value is not iterable it throws an InvalidArgumentException.
      *
      * @param mixed $iterable
      *
@@ -125,7 +152,8 @@ class ApcuCache implements CacheInterface
             throw new InvalidArgumentException('Iterable is expected, got ' . gettype($iterable));
         }
 
-        return $iterable instanceof \Traversable ? iterator_to_array($iterable) : (array)$iterable;
+        /** @psalm-suppress RedundantCast */
+        return $iterable instanceof Traversable ? iterator_to_array($iterable) : (array) $iterable;
     }
 
     /**
@@ -133,7 +161,7 @@ class ApcuCache implements CacheInterface
      */
     private function validateKey($key): void
     {
-        if (!\is_string($key) || strpbrk($key, '{}()/\@:')) {
+        if (!is_string($key) || $key === '' || strpbrk($key, '{}()/\@:')) {
             throw new InvalidArgumentException('Invalid key value.');
         }
     }
@@ -170,6 +198,7 @@ class ApcuCache implements CacheInterface
     private function normalizeAPCuOutput(array $values): array
     {
         $normalizedValues = [];
+
         foreach ($values as $key => $value) {
             $normalizedValues[$key] = $value;
         }
@@ -187,8 +216,9 @@ class ApcuCache implements CacheInterface
     private function splitValuesByKeyType(array $values): array
     {
         $withIntKeys = [];
+
         foreach ($values as $key => $value) {
-            if (\is_int($key)) {
+            if (is_int($key)) {
                 $withIntKeys[$key] = $value;
                 unset($values[$key]);
             }
