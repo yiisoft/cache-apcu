@@ -35,6 +35,7 @@ use function strpbrk;
 final class ApcuCache implements CacheInterface
 {
     private const TTL_INFINITY = 0;
+    private const TTL_EXPIRED = -1;
 
     public function get($key, $default = null)
     {
@@ -136,7 +137,8 @@ final class ApcuCache implements CacheInterface
             return (new DateTime('@0'))->add($ttl)->getTimestamp();
         }
 
-        return (int) $ttl;
+        $ttl = (int) $ttl;
+        return $ttl > 0 ? $ttl : self::TTL_EXPIRED;
     }
 
     /**

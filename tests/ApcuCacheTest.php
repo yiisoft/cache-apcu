@@ -215,6 +215,14 @@ final class ApcuCacheTest extends TestCase
         $this->assertSameExceptObject($data, $this->cache->getMultiple($keys));
     }
 
+    public function testGetMultipleWithKeysNotExist(): void
+    {
+        $this->assertSameExceptObject(
+            ['key-1' => null, 'key-2' => null],
+            $this->cache->getMultiple(['key-1', 'key-2']),
+        );
+    }
+
     public function testDeleteMultiple(): void
     {
         $data = $this->getDataProviderData();
@@ -274,9 +282,9 @@ final class ApcuCacheTest extends TestCase
         return [
             [123, 123],
             ['123', 123],
-            ['', 0],
+            ['', -1],
             [null, 0],
-            [0, 0],
+            [0, -1],
             [new DateInterval('PT6H8M'), 6 * 3600 + 8 * 60],
             [new DateInterval('P2Y4D'), 2 * 365 * 24 * 3600 + 4 * 24 * 3600],
         ];
