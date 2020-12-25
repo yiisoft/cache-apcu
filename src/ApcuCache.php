@@ -49,7 +49,7 @@ final class ApcuCache implements CacheInterface
         $this->validateKey($key);
         $ttl = $this->normalizeTtl($ttl);
 
-        if ($ttl < 0) {
+        if ($ttl <= self::TTL_EXPIRED) {
             return $this->delete($key);
         }
 
