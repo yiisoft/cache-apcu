@@ -4,14 +4,33 @@ declare(strict_types=1);
 
 namespace Yiisoft\Cache\Apcu\Tests;
 
+use ArrayIterator;
 use DateInterval;
-use Psr\SimpleCache\CacheInterface;
+use Exception;
+use IteratorAggregate;
+use PHPUnit\Framework\TestCase;
 use Psr\SimpleCache\InvalidArgumentException;
 use ReflectionException;
+use ReflectionObject;
+use stdClass;
 use Yiisoft\Cache\Apcu\ApcuCache;
 
-class ApcuCacheTest extends TestCase
+use function array_keys;
+use function array_map;
+use function extension_loaded;
+use function ini_get;
+use function is_array;
+use function is_object;
+
+final class ApcuCacheTest extends TestCase
 {
+    private ApcuCache $cache;
+
+    public function setUp(): void
+    {
+        $this->cache = new ApcuCache();
+    }
+
     public static function setUpBeforeClass(): void
     {
         if (!extension_loaded('apcu')) {
@@ -23,9 +42,24 @@ class ApcuCacheTest extends TestCase
         }
     }
 
-    protected function createCacheInstance(): CacheInterface
+    public function dataProvider(): array
     {
-        return new ApcuCache();
+        $object = new stdClass();
+        $object->test_field = 'test_value';
+        return [
+            'integer' => ['test_integer', 1],
+            'double' => ['test_double', 1.1],
+            'string' => ['test_string', 'a'],
+            'boolean_true' => ['test_boolean_true', true],
+            'boolean_false' => ['test_boolean_false', false],
+            'object' => ['test_object', $object],
+            'array' => ['test_array', ['test_key' => 'test_value']],
+            'null' => ['test_null', null],
+            'supported_key_characters' => ['AZaz09_.', 'b'],
+            '64_characters_key_max' => ['bVGEIeslJXtDPrtK.hgo6HL25_.1BGmzo4VA25YKHveHh7v9tUP8r5BNCyLhx4zy', 'c'],
+            'string_with_number_key' => ['111', 11],
+            'string_with_number_key_1' => ['022', 22],
+        ];
     }
 
     /**
@@ -38,11 +72,8 @@ class ApcuCacheTest extends TestCase
      */
     public function testSet($key, $value): void
     {
-        $cache = $this->createCacheInstance();
-        $cache->clear();
-
         for ($i = 0; $i < 2; $i++) {
-            $this->assertTrue($cache->set($key, $value));
+            $this->assertTrue($this->cache->set($key, $value));
         }
     }
 
@@ -56,11 +87,8 @@ class ApcuCacheTest extends TestCase
      */
     public function testGet($key, $value): void
     {
-        $cache = $this->createCacheInstance();
-        $cache->clear();
-
-        $cache->set($key, $value);
-        $valueFromCache = $cache->get($key, 'default');
+        $this->cache->set($key, $value);
+        $valueFromCache = $this->cache->get($key, 'default');
 
         $this->assertSameExceptObject($value, $valueFromCache);
     }
@@ -75,11 +103,8 @@ class ApcuCacheTest extends TestCase
      */
     public function testValueInCacheCannotBeChanged($key, $value): void
     {
-        $cache = $this->createCacheInstance();
-        $cache->clear();
-
-        $cache->set($key, $value);
-        $valueFromCache = $cache->get($key, 'default');
+        $this->cache->set($key, $value);
+        $valueFromCache = $this->cache->get($key, 'default');
 
         $this->assertSameExceptObject($value, $valueFromCache);
 
@@ -87,7 +112,7 @@ class ApcuCacheTest extends TestCase
             $originalValue = clone $value;
             $valueFromCache->test_field = 'changed';
             $value->test_field = 'changed';
-            $valueFromCacheNew = $cache->get($key, 'default');
+            $valueFromCacheNew = $this->cache->get($key, 'default');
             $this->assertSameExceptObject($originalValue, $valueFromCacheNew);
         }
     }
@@ -102,25 +127,19 @@ class ApcuCacheTest extends TestCase
      */
     public function testHas($key, $value): void
     {
-        $cache = $this->createCacheInstance();
-        $cache->clear();
+        $this->cache->set($key, $value);
 
-        $cache->set($key, $value);
-
-        $this->assertTrue($cache->has($key));
+        $this->assertTrue($this->cache->has($key));
         // check whether exists affects the value
-        $this->assertSameExceptObject($value, $cache->get($key));
+        $this->assertSameExceptObject($value, $this->cache->get($key));
 
-        $this->assertTrue($cache->has($key));
-        $this->assertFalse($cache->has('not_exists'));
+        $this->assertTrue($this->cache->has($key));
+        $this->assertFalse($this->cache->has('not_exists'));
     }
 
     public function testGetNonExistent(): void
     {
-        $cache = $this->createCacheInstance();
-        $cache->clear();
-
-        $this->assertNull($cache->get('non_existent_key'));
+        $this->assertNull($this->cache->get('non_existent_key'));
     }
 
     /**
@@ -133,14 +152,11 @@ class ApcuCacheTest extends TestCase
      */
     public function testDelete($key, $value): void
     {
-        $cache = $this->createCacheInstance();
-        $cache->clear();
+        $this->cache->set($key, $value);
 
-        $cache->set($key, $value);
-
-        $this->assertSameExceptObject($value, $cache->get($key));
-        $this->assertTrue($cache->delete($key));
-        $this->assertNull($cache->get($key));
+        $this->assertSameExceptObject($value, $this->cache->get($key));
+        $this->assertTrue($this->cache->delete($key));
+        $this->assertNull($this->cache->get($key));
     }
 
     /**
@@ -153,11 +169,12 @@ class ApcuCacheTest extends TestCase
      */
     public function testClear($key, $value): void
     {
-        $cache = $this->createCacheInstance();
-        $cache = $this->prepare($cache);
+        foreach ($this->dataProvider() as $datum) {
+            $this->cache->set($datum[0], $datum[1]);
+        }
 
-        $this->assertTrue($cache->clear());
-        $this->assertNull($cache->get($key));
+        $this->assertTrue($this->cache->clear());
+        $this->assertNull($this->cache->get($key));
     }
 
     /**
@@ -169,15 +186,11 @@ class ApcuCacheTest extends TestCase
      */
     public function testSetMultiple(?int $ttl): void
     {
-        $cache = $this->createCacheInstance();
-        $cache->clear();
-
         $data = $this->getDataProviderData();
-
-        $cache->setMultiple($data, $ttl);
+        $this->cache->setMultiple($data, $ttl);
 
         foreach ($data as $key => $value) {
-            $this->assertSameExceptObject($value, $cache->get((string)$key));
+            $this->assertSameExceptObject($value, $this->cache->get((string) $key));
         }
     }
 
@@ -194,53 +207,40 @@ class ApcuCacheTest extends TestCase
 
     public function testGetMultiple(): void
     {
-        $cache = $this->createCacheInstance();
-        $cache->clear();
-
         $data = $this->getDataProviderData();
         $keys = array_map('strval', array_keys($data));
 
-        $cache->setMultiple($data);
+        $this->cache->setMultiple($data);
 
-        $this->assertSameExceptObject($data, $cache->getMultiple($keys));
+        $this->assertSameExceptObject($data, $this->cache->getMultiple($keys));
     }
 
     public function testDeleteMultiple(): void
     {
-        $cache = $this->createCacheInstance();
-        $cache->clear();
-
         $data = $this->getDataProviderData();
         $keys = array_map('strval', array_keys($data));
 
-        $cache->setMultiple($data);
+        $this->cache->setMultiple($data);
 
-        $this->assertSameExceptObject($data, $cache->getMultiple($keys));
+        $this->assertSameExceptObject($data, $this->cache->getMultiple($keys));
 
-        $cache->deleteMultiple($keys);
+        $this->cache->deleteMultiple($keys);
 
-        $emptyData = array_map(static function ($v) {
-            return null;
-        }, $data);
+        $emptyData = array_map(static fn ($v) => null, $data);
 
-        $this->assertSameExceptObject($emptyData, $cache->getMultiple($keys));
+        $this->assertSameExceptObject($emptyData, $this->cache->getMultiple($keys));
     }
 
     public function testNegativeTtl(): void
     {
-        $cache = $this->createCacheInstance();
-        $cache->clear();
-        $cache->setMultiple([
-            'a' => 1,
-            'b' => 2,
-        ]);
+        $this->cache->setMultiple(['a' => 1, 'b' => 2]);
 
-        $this->assertTrue($cache->has('a'));
-        $this->assertTrue($cache->has('b'));
+        $this->assertTrue($this->cache->has('a'));
+        $this->assertTrue($this->cache->has('b'));
 
-        $cache->set('a', 11, -1);
+        $this->cache->set('a', 11, -1);
 
-        $this->assertFalse($cache->has('a'));
+        $this->assertFalse($this->cache->has('a'));
     }
 
     /**
@@ -253,14 +253,19 @@ class ApcuCacheTest extends TestCase
      */
     public function testNormalizeTtl($ttl, $expectedResult): void
     {
-        $cache = new ApcuCache();
-        $this->assertSameExceptObject($expectedResult, $this->invokeMethod($cache, 'normalizeTtl', [$ttl]));
+        $reflection = new ReflectionObject($this->cache);
+        $method = $reflection->getMethod('normalizeTtl');
+        $method->setAccessible(true);
+        $result = $method->invokeArgs($this->cache, [$ttl]);
+        $method->setAccessible(false);
+
+        $this->assertSameExceptObject($expectedResult, $result);
     }
 
     /**
      * Data provider for {@see testNormalizeTtl()}
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return array test data
      */
@@ -287,12 +292,9 @@ class ApcuCacheTest extends TestCase
      */
     public function testValuesAsIterable(array $array, iterable $iterable): void
     {
-        $cache = $this->createCacheInstance();
-        $cache->clear();
+        $this->cache->setMultiple($iterable);
 
-        $cache->setMultiple($iterable);
-
-        $this->assertSameExceptObject($array, $cache->getMultiple(array_keys($array)));
+        $this->assertSameExceptObject($array, $this->cache->getMultiple(array_keys($array)));
     }
 
     public function iterableProvider(): array
@@ -304,14 +306,14 @@ class ApcuCacheTest extends TestCase
             ],
             'ArrayIterator' => [
                 ['a' => 1, 'b' => 2,],
-                new \ArrayIterator(['a' => 1, 'b' => 2,]),
+                new ArrayIterator(['a' => 1, 'b' => 2,]),
             ],
             'IteratorAggregate' => [
                 ['a' => 1, 'b' => 2,],
-                new class() implements \IteratorAggregate {
+                new class() implements IteratorAggregate {
                     public function getIterator()
                     {
-                        return new \ArrayIterator(['a' => 1, 'b' => 2,]);
+                        return new ArrayIterator(['a' => 1, 'b' => 2,]);
                     }
                 },
             ],
@@ -327,76 +329,150 @@ class ApcuCacheTest extends TestCase
 
     public function testSetWithDateIntervalTtl(): void
     {
-        $cache = $this->createCacheInstance();
-        $cache->clear();
+        $this->cache->set('a', 1, new DateInterval('PT1H'));
+        $this->assertSameExceptObject(1, $this->cache->get('a'));
 
-        $cache->set('a', 1, new DateInterval('PT1H'));
-        $this->assertSameExceptObject(1, $cache->get('a'));
-
-        $cache->setMultiple(['b' => 2]);
-        $this->assertSameExceptObject(['b' => 2], $cache->getMultiple(['b']));
+        $this->cache->setMultiple(['b' => 2]);
+        $this->assertSameExceptObject(['b' => 2], $this->cache->getMultiple(['b']));
     }
 
-    public function testGetInvalidKey(): void
+    public function invalidKeyProvider(): array
     {
-        $this->expectException(InvalidArgumentException::class);
-        $cache = $this->createCacheInstance();
-        $cache->get(1);
+        return [
+            'int' => [1],
+            'float' => [1.1],
+            'null' => [null],
+            'bool' => [true],
+            'object' => [new stdClass()],
+            'callable' => [fn () => 'key'],
+            'psr-reserved' => ['{}()/\@:'],
+            'empty-string' => [''],
+        ];
     }
 
-    public function testSetInvalidKey(): void
+    /**
+     * @dataProvider invalidKeyProvider
+     *
+     * @param mixed $key
+     */
+    public function testGetThrowExceptionForInvalidKey($key): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $cache = $this->createCacheInstance();
-        $cache->set(1, 1);
+        $this->cache->get($key);
     }
 
-    public function testDeleteInvalidKey(): void
+    /**
+     * @dataProvider invalidKeyProvider
+     *
+     * @param mixed $key
+     */
+    public function testSetThrowExceptionForInvalidKey($key): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $cache = $this->createCacheInstance();
-        $cache->delete(1);
+        $this->cache->set($key, 'value');
     }
 
-    public function testGetMultipleInvalidKeys(): void
+    /**
+     * @dataProvider invalidKeyProvider
+     *
+     * @param mixed $key
+     */
+    public function testDeleteThrowExceptionForInvalidKey($key): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $cache = $this->createCacheInstance();
-        $cache->getMultiple([true]);
+        $this->cache->delete($key);
     }
 
-    public function testGetMultipleInvalidKeysNotIterable(): void
+    /**
+     * @dataProvider invalidKeyProvider
+     *
+     * @param mixed $key
+     */
+    public function testGetMultipleThrowExceptionForInvalidKeys($key): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $cache = $this->createCacheInstance();
-        $cache->getMultiple(1);
+        $this->cache->getMultiple([$key]);
     }
 
-    public function testSetMultipleInvalidKeysNotIterable(): void
+    /**
+     * @dataProvider invalidKeyProvider
+     *
+     * @param mixed $key
+     */
+    public function testGetMultipleThrowExceptionForInvalidKeysNotIterable($key): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $cache = $this->createCacheInstance();
-        $cache->setMultiple(1);
+        $this->cache->getMultiple($key);
     }
 
-    public function testDeleteMultipleInvalidKeys(): void
+    /**
+     * @dataProvider invalidKeyProvider
+     *
+     * @param mixed $key
+     */
+    public function testSetMultipleThrowExceptionForInvalidKeysNotIterable($key): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $cache = $this->createCacheInstance();
-        $cache->deleteMultiple([true]);
+        $this->cache->setMultiple($key);
     }
 
-    public function testDeleteMultipleInvalidKeysNotIterable(): void
+    /**
+     * @dataProvider invalidKeyProvider
+     *
+     * @param mixed $key
+     */
+    public function testDeleteMultipleThrowExceptionForInvalidKeys($key): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $cache = $this->createCacheInstance();
-        $cache->deleteMultiple(1);
+        $this->cache->deleteMultiple([$key]);
     }
 
-    public function testHasInvalidKey(): void
+    /**
+     * @dataProvider invalidKeyProvider
+     *
+     * @param mixed $key
+     */
+    public function testDeleteMultipleThrowExceptionForInvalidKeysNotIterable($key): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $cache = $this->createCacheInstance();
-        $cache->has(1);
+        $this->cache->deleteMultiple($key);
+    }
+
+    private function getDataProviderData(): array
+    {
+        $dataProvider = $this->dataProvider();
+        $data = [];
+
+        foreach ($dataProvider as $item) {
+            $data[$item[0]] = $item[1];
+        }
+
+        return $data;
+    }
+
+    private function assertSameExceptObject($expected, $actual): void
+    {
+        // assert for all types
+        $this->assertEquals($expected, $actual);
+
+        // no more asserts for objects
+        if (is_object($expected)) {
+            return;
+        }
+
+        // asserts same for all types except objects and arrays that can contain objects
+        if (!is_array($expected)) {
+            $this->assertSame($expected, $actual);
+            return;
+        }
+
+        // assert same for each element of the array except objects
+        foreach ($expected as $key => $value) {
+            if (!is_object($value)) {
+                $this->assertSame($expected[$key], $actual[$key]);
+            } else {
+                $this->assertEquals($expected[$key], $actual[$key]);
+            }
+        }
     }
 }
