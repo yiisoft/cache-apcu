@@ -12,6 +12,9 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
+    env:
+      extensions: apcu
+
     strategy:
       matrix:
         os:
@@ -28,9 +31,9 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: "${{ matrix.php }}"
-          ini-values: memory_limit=-1
+          ini-values: memory_limit=-1, apc.enable=1, apc.enable_cli=1
           coverage: "pcov"
-          tools: composer:v2
+          tools: composer:v2, pecl
 
       - name: Determine composer cache directory
         run: echo "COMPOSER_CACHE_DIR=$(composer config cache-dir)" >> $GITHUB_ENV

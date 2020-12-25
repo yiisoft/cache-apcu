@@ -9,7 +9,11 @@ build:
     nodes:
         analysis:
             environment:
-                php: 7.4.12
+                php:
+                    version: 7.4.12
+                    ini:
+                        apc.enable: 1
+                        apc.enable_cli: 1
 
             dependencies:
                 override:
@@ -21,7 +25,11 @@ build:
 
         tests-and-coverage:
             environment:
-                php: 7.4.12
+                php:
+                    version: 7.4.12
+                    ini:
+                        apc.enable: 1
+                        apc.enable_cli: 1
 
             dependencies:
                 override:
@@ -37,5 +45,3 @@ build:
                         coverage:
                             file: coverage.xml
                             format: php-clover
-
-
