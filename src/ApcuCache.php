@@ -183,7 +183,7 @@ final class ApcuCache implements CacheInterface
      */
     private function validateKeysOfValues(array $values): void
     {
-        $keys = array_map('strval', array_keys($values));
+        $keys = array_map('\strval', array_keys($values));
         $this->validateKeys($keys);
     }
 
@@ -209,7 +209,7 @@ final class ApcuCache implements CacheInterface
     }
 
     /**
-     * Splits the array of values into two arrays, one with int keys and one with string keys
+     * Splits the array of values into two arrays, one with int keys and one with string keys.
      *
      * @param array $values
      *

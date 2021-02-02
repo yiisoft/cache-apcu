@@ -195,7 +195,7 @@ final class ApcuCacheTest extends TestCase
     }
 
     /**
-     * @return array testing multiSet with and without expiry
+     * @return array Testing multiSet with and without expiry.
      */
     public function dataProviderSetMultiple(): array
     {
@@ -208,7 +208,7 @@ final class ApcuCacheTest extends TestCase
     public function testGetMultiple(): void
     {
         $data = $this->getDataProviderData();
-        $keys = array_map('strval', array_keys($data));
+        $keys = array_map('\strval', array_keys($data));
 
         $this->cache->setMultiple($data);
 
@@ -226,7 +226,7 @@ final class ApcuCacheTest extends TestCase
     public function testDeleteMultiple(): void
     {
         $data = $this->getDataProviderData();
-        $keys = array_map('strval', array_keys($data));
+        $keys = array_map('\strval', array_keys($data));
 
         $this->cache->setMultiple($data);
 
@@ -460,7 +460,7 @@ final class ApcuCacheTest extends TestCase
 
     private function assertSameExceptObject($expected, $actual): void
     {
-        // assert for all types
+        // Assert for all types.
         $this->assertEquals($expected, $actual);
 
         // no more asserts for objects
@@ -468,18 +468,18 @@ final class ApcuCacheTest extends TestCase
             return;
         }
 
-        // asserts same for all types except objects and arrays that can contain objects
+        // Assert same for all types except objects and arrays that can contain objects.
         if (!is_array($expected)) {
             $this->assertSame($expected, $actual);
             return;
         }
 
-        // assert same for each element of the array except objects
+        // Assert same for each element of the array except objects.
         foreach ($expected as $key => $value) {
-            if (!is_object($value)) {
-                $this->assertSame($expected[$key], $actual[$key]);
-            } else {
+            if (is_object($value)) {
                 $this->assertEquals($expected[$key], $actual[$key]);
+            } else {
+                $this->assertSame($expected[$key], $actual[$key]);
             }
         }
     }
