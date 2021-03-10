@@ -77,7 +77,7 @@ final class ApcuCache implements CacheInterface
             return $values;
         }
 
-        $valuesFromCache = $this->normalizeAPCuOutput($valuesFromCache);
+        //$valuesFromCache = $this->normalizeAPCuOutput($valuesFromCache);
 
         foreach ($values as $key => $value) {
             $values[$key] = $valuesFromCache[(string) $key] ?? $value;
