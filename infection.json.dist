@@ -1,13 +1,13 @@
 {
     "source": {
         "directories": [
-                "src"
+            "src"
         ]
     },
     "logs": {
         "text": "php:\/\/stderr",
-        "badge": {
-            "branch": "master"
+        "stryker": {
+            "badge": "master"
         }
     },
     "mutators": {
