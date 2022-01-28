@@ -15,18 +15,23 @@
 [![static analysis](https://github.com/yiisoft/cache-apcu/workflows/static%20analysis/badge.svg)](https://github.com/yiisoft/cache-apcu/actions?query=workflow%3A%22static+analysis%22)
 [![type-coverage](https://shepherd.dev/github/yiisoft/cache-apcu/coverage.svg)](https://shepherd.dev/github/yiisoft/cache-apcu)
 
-This package uses the PHP [APC](https://www.php.net/manual/book.apcu.php)
+This package uses the PHP [APCu](https://www.php.net/manual/book.apcu.php)
 extension and implements [PSR-16](https://www.php-fig.org/psr/psr-16/) cache.
 
 This option can be considered as the fastest one when dealing with a cache for a
 centralized thick application (e.g. one server, no dedicated load balancers, etc.).
+
+## Requirements
+
+- PHP 7.4 or higher.
+- `APCu` PHP extension.
 
 ## Installation
 
 The package could be installed with composer:
 
 ```
-composer require yiisoft/cache-apcu
+composer require yiisoft/cache-apcu --prefer-dist
 ```
 
 ## General usage
@@ -69,6 +74,8 @@ To work with values in a more efficient manner, batch operations should be used:
 - `deleteMultiple()`
 
 This package can be used as a cache handler for the [Yii Caching Library](https://github.com/yiisoft/cache).
+
+## Testing
 
 ### Unit testing
 
