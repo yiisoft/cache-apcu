@@ -26,8 +26,7 @@ build:
     phpunit:
       dependencies:
         override:
-          - sudo apt install -y php-apcu
-          - echo 'extension=pdo_apcu' >> /home/scrutinizer/.phpenv/versions/8.0.18/etc/php.ini
+          - yes | pecl install apcu
           - composer self-update
           - composer update --prefer-dist --no-interaction --no-progress --optimize-autoloader --ansi
 
