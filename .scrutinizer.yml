@@ -21,7 +21,7 @@ build:
     analysis:
       dependencies:
         override:
-          - pecl install apcu
+          - sudo apt install php-apcu
 
       tests:
         override:
@@ -30,7 +30,7 @@ build:
     phpunit:
       dependencies:
         override:
-          - pecl install apcu
+          - sudo apt install php-apcu
           - composer self-update
           - composer update --prefer-dist --no-interaction --no-progress --optimize-autoloader --ansi
 
