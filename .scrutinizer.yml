@@ -30,7 +30,7 @@ build:
     phpunit:
       dependencies:
         override:
-          - sudo apt install php-apcu
+          - sudo apt install -y php-apcu
           - composer self-update
           - composer update --prefer-dist --no-interaction --no-progress --optimize-autoloader --ansi
 
