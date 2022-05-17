@@ -21,9 +21,10 @@ name: mutation test
 
 jobs:
   mutation:
-    uses: yiisoft/actions/.github/workflows/roave-infection.yml@master
+    uses: yiisoft/actions/.github/workflows/roave-infection.yml@add-ini-values-infection
     with:
       extensions: apcu
+      ini-values: date.timezone='UTC', apc.enable=1, apc.enable_cli=1
       os: >-
         ['ubuntu-latest']
       php: >-

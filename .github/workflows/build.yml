@@ -26,6 +26,7 @@ jobs:
     uses: yiisoft/actions/.github/workflows/phpunit.yml@master
     with:
       extensions: apcu
+      ini-values: date.timezone='UTC', apc.enable=1, apc.enable_cli=1
       os: >-
         ['ubuntu-latest', 'windows-latest']
       php: >-
