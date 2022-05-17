@@ -21,7 +21,7 @@ build:
     analysis:
       dependencies:
         override:
-          - sudo apt install php-apcu
+          - sudo apt install -y php-apcu
 
       tests:
         override:
