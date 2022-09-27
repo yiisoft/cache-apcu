@@ -180,7 +180,6 @@ final class ApcuCacheTest extends TestCase
     /**
      * @dataProvider dataProviderSetMultiple
      *
-     *
      * @throws InvalidArgumentException
      */
     public function testSetMultiple(?int $ttl): void
@@ -253,7 +252,6 @@ final class ApcuCacheTest extends TestCase
     /**
      * @dataProvider dataProviderNormalizeTtl
      *
-     *
      * @throws ReflectionException
      */
     public function testNormalizeTtl(mixed $ttl, mixed $expectedResult): void
@@ -289,7 +287,6 @@ final class ApcuCacheTest extends TestCase
 
     /**
      * @dataProvider iterableProvider
-     *
      *
      * @throws InvalidArgumentException
      */

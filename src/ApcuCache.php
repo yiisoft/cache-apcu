@@ -143,8 +143,6 @@ final class ApcuCache implements CacheInterface
 
     /**
      * Converts iterable to array. If provided value is not iterable it throws an InvalidArgumentException.
-     *
-     *
      */
     private function iterableToArray(mixed $iterable): array
     {
@@ -181,8 +179,6 @@ final class ApcuCache implements CacheInterface
      * representation of an integer ('123') the returned key from the cache doesn't equal neither to an integer nor a
      * string ($key !== 123 and $key !== '123'). Coping element from the returned array one by one to the new array
      * fixes this issue.
-     *
-     *
      */
     private function normalizeAPCuOutput(array $values): array
     {
@@ -197,8 +193,6 @@ final class ApcuCache implements CacheInterface
 
     /**
      * Splits the array of values into two arrays, one with int keys and one with string keys.
-     *
-     *
      */
     private function splitValuesByKeyType(array $values): array
     {
