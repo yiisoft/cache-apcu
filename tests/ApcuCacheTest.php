@@ -180,8 +180,6 @@ final class ApcuCacheTest extends TestCase
     /**
      * @dataProvider dataProviderSetMultiple
      *
-     * @param int|null $ttl
-     *
      * @throws InvalidArgumentException
      */
     public function testSetMultiple(?int $ttl): void
@@ -254,12 +252,9 @@ final class ApcuCacheTest extends TestCase
     /**
      * @dataProvider dataProviderNormalizeTtl
      *
-     * @param mixed $ttl
-     * @param mixed $expectedResult
-     *
      * @throws ReflectionException
      */
-    public function testNormalizeTtl($ttl, $expectedResult): void
+    public function testNormalizeTtl(mixed $ttl, mixed $expectedResult): void
     {
         $reflection = new ReflectionObject($this->cache);
         $method = $reflection->getMethod('normalizeTtl');
@@ -293,9 +288,6 @@ final class ApcuCacheTest extends TestCase
     /**
      * @dataProvider iterableProvider
      *
-     * @param array $array
-     * @param iterable $iterable
-     *
      * @throws InvalidArgumentException
      */
     public function testValuesAsIterable(array $array, iterable $iterable): void
@@ -312,11 +304,11 @@ final class ApcuCacheTest extends TestCase
                 ['a' => 1, 'b' => 2,],
                 ['a' => 1, 'b' => 2,],
             ],
-            'ArrayIterator' => [
+            \ArrayIterator::class => [
                 ['a' => 1, 'b' => 2,],
                 new ArrayIterator(['a' => 1, 'b' => 2,]),
             ],
-            'IteratorAggregate' => [
+            \IteratorAggregate::class => [
                 ['a' => 1, 'b' => 2,],
                 new class () implements IteratorAggregate {
                     public function getIterator(): ArrayIterator
@@ -360,10 +352,8 @@ final class ApcuCacheTest extends TestCase
 
     /**
      * @dataProvider invalidKeyProvider
-     *
-     * @param mixed $key
      */
-    public function testGetThrowExceptionForInvalidKey($key): void
+    public function testGetThrowExceptionForInvalidKey(mixed $key): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->cache->get($key);
@@ -371,10 +361,8 @@ final class ApcuCacheTest extends TestCase
 
     /**
      * @dataProvider invalidKeyProvider
-     *
-     * @param mixed $key
      */
-    public function testSetThrowExceptionForInvalidKey($key): void
+    public function testSetThrowExceptionForInvalidKey(mixed $key): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->cache->set($key, 'value');
@@ -382,10 +370,8 @@ final class ApcuCacheTest extends TestCase
 
     /**
      * @dataProvider invalidKeyProvider
-     *
-     * @param mixed $key
      */
-    public function testDeleteThrowExceptionForInvalidKey($key): void
+    public function testDeleteThrowExceptionForInvalidKey(mixed $key): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->cache->delete($key);
@@ -393,10 +379,8 @@ final class ApcuCacheTest extends TestCase
 
     /**
      * @dataProvider invalidKeyProvider
-     *
-     * @param mixed $key
      */
-    public function testGetMultipleThrowExceptionForInvalidKeys($key): void
+    public function testGetMultipleThrowExceptionForInvalidKeys(mixed $key): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->cache->getMultiple([$key]);
@@ -404,10 +388,8 @@ final class ApcuCacheTest extends TestCase
 
     /**
      * @dataProvider invalidKeyProvider
-     *
-     * @param mixed $key
      */
-    public function testGetMultipleThrowExceptionForInvalidKeysNotIterable($key): void
+    public function testGetMultipleThrowExceptionForInvalidKeysNotIterable(mixed $key): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->cache->getMultiple($key);
@@ -415,10 +397,8 @@ final class ApcuCacheTest extends TestCase
 
     /**
      * @dataProvider invalidKeyProvider
-     *
-     * @param mixed $key
      */
-    public function testSetMultipleThrowExceptionForInvalidKeysNotIterable($key): void
+    public function testSetMultipleThrowExceptionForInvalidKeysNotIterable(mixed $key): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->cache->setMultiple($key);
@@ -426,10 +406,8 @@ final class ApcuCacheTest extends TestCase
 
     /**
      * @dataProvider invalidKeyProvider
-     *
-     * @param mixed $key
      */
-    public function testDeleteMultipleThrowExceptionForInvalidKeys($key): void
+    public function testDeleteMultipleThrowExceptionForInvalidKeys(mixed $key): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->cache->deleteMultiple([$key]);
@@ -437,10 +415,8 @@ final class ApcuCacheTest extends TestCase
 
     /**
      * @dataProvider invalidKeyProvider
-     *
-     * @param mixed $key
      */
-    public function testDeleteMultipleThrowExceptionForInvalidKeysNotIterable($key): void
+    public function testDeleteMultipleThrowExceptionForInvalidKeysNotIterable(mixed $key): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->cache->deleteMultiple($key);
