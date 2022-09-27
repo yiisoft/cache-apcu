@@ -144,11 +144,9 @@ final class ApcuCache implements CacheInterface
     /**
      * Converts iterable to array. If provided value is not iterable it throws an InvalidArgumentException.
      *
-     * @param mixed $iterable
      *
-     * @return array
      */
-    private function iterableToArray($iterable): array
+    private function iterableToArray(mixed $iterable): array
     {
         if (!is_iterable($iterable)) {
             throw new InvalidArgumentException('Iterable is expected, got ' . gettype($iterable));
@@ -158,19 +156,13 @@ final class ApcuCache implements CacheInterface
         return $iterable instanceof Traversable ? iterator_to_array($iterable) : (array) $iterable;
     }
 
-    /**
-     * @param mixed $key
-     */
-    private function validateKey($key): void
+    private function validateKey(mixed $key): void
     {
         if (!is_string($key) || $key === '' || strpbrk($key, '{}()/\@:')) {
             throw new InvalidArgumentException('Invalid key value.');
         }
     }
 
-    /**
-     * @param array $keys
-     */
     private function validateKeys(array $keys): void
     {
         foreach ($keys as $key) {
@@ -178,9 +170,6 @@ final class ApcuCache implements CacheInterface
         }
     }
 
-    /**
-     * @param array $values
-     */
     private function validateKeysOfValues(array $values): void
     {
         $keys = array_map('\strval', array_keys($values));
@@ -193,9 +182,7 @@ final class ApcuCache implements CacheInterface
      * string ($key !== 123 and $key !== '123'). Coping element from the returned array one by one to the new array
      * fixes this issue.
      *
-     * @param array $values
      *
-     * @return array
      */
     private function normalizeAPCuOutput(array $values): array
     {
@@ -211,9 +198,7 @@ final class ApcuCache implements CacheInterface
     /**
      * Splits the array of values into two arrays, one with int keys and one with string keys.
      *
-     * @param array $values
      *
-     * @return array
      */
     private function splitValuesByKeyType(array $values): array
     {
