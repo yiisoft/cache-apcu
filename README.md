@@ -23,7 +23,7 @@ centralized thick application (e.g. one server, no dedicated load balancers, etc
 
 ## Requirements
 
-- PHP 7.4 or higher.
+- PHP 8.0 or higher.
 - `APCu` PHP extension.
 
 ## Installation

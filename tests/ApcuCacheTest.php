@@ -254,12 +254,9 @@ final class ApcuCacheTest extends TestCase
     /**
      * @dataProvider dataProviderNormalizeTtl
      *
-     * @param mixed $ttl
-     * @param mixed $expectedResult
-     *
      * @throws ReflectionException
      */
-    public function testNormalizeTtl($ttl, $expectedResult): void
+    public function testNormalizeTtl(mixed $ttl, mixed $expectedResult): void
     {
         $reflection = new ReflectionObject($this->cache);
         $method = $reflection->getMethod('normalizeTtl');
@@ -347,12 +344,6 @@ final class ApcuCacheTest extends TestCase
     public function invalidKeyProvider(): array
     {
         return [
-            'int' => [1],
-            'float' => [1.1],
-            'null' => [null],
-            'bool' => [true],
-            'object' => [new stdClass()],
-            'callable' => [fn () => 'key'],
             'psr-reserved' => ['{}()/\@:'],
             'empty-string' => [''],
         ];
@@ -360,10 +351,8 @@ final class ApcuCacheTest extends TestCase
 
     /**
      * @dataProvider invalidKeyProvider
-     *
-     * @param mixed $key
      */
-    public function testGetThrowExceptionForInvalidKey($key): void
+    public function testGetThrowExceptionForInvalidKey(string $key): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->cache->get($key);
@@ -407,43 +396,10 @@ final class ApcuCacheTest extends TestCase
      *
      * @param mixed $key
      */
-    public function testGetMultipleThrowExceptionForInvalidKeysNotIterable($key): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->cache->getMultiple($key);
-    }
-
-    /**
-     * @dataProvider invalidKeyProvider
-     *
-     * @param mixed $key
-     */
-    public function testSetMultipleThrowExceptionForInvalidKeysNotIterable($key): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->cache->setMultiple($key);
-    }
-
-    /**
-     * @dataProvider invalidKeyProvider
-     *
-     * @param mixed $key
-     */
     public function testDeleteMultipleThrowExceptionForInvalidKeys($key): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->cache->deleteMultiple([$key]);
-    }
-
-    /**
-     * @dataProvider invalidKeyProvider
-     *
-     * @param mixed $key
-     */
-    public function testDeleteMultipleThrowExceptionForInvalidKeysNotIterable($key): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->cache->deleteMultiple($key);
     }
 
     private function getDataProviderData(): array
@@ -458,7 +414,7 @@ final class ApcuCacheTest extends TestCase
         return $data;
     }
 
-    private function assertSameExceptObject($expected, $actual): void
+    private function assertSameExceptObject(mixed $expected, mixed $actual): void
     {
         // Assert for all types.
         $this->assertEquals($expected, $actual);
