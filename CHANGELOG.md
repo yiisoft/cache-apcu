@@ -1,9 +1,9 @@
 # Yii ApcuCache Change Log
 
 
-## 1.0.1 under development
+## 2.0.0 under development
 
-- no changes in this release.
+- Chg #28: Raise the minimum `psr/simple-cache` version to `^2.0|^3.0` and the minimum PHP version to `^8.0` (@dehbka)
 
 ## 1.0.0 February 02, 2021
 

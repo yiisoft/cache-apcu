@@ -17,10 +17,7 @@ use function apcu_store;
 use function array_fill_keys;
 use function array_keys;
 use function array_map;
-use function gettype;
 use function is_int;
-use function is_iterable;
-use function is_string;
 use function iterator_to_array;
 use function strpbrk;
 
@@ -37,14 +34,14 @@ final class ApcuCache implements CacheInterface
     private const TTL_INFINITY = 0;
     private const TTL_EXPIRED = -1;
 
-    public function get($key, $default = null)
+    public function get(string $key, mixed $default = null): mixed
     {
         $this->validateKey($key);
         $value = apcu_fetch($key, $success);
         return $success ? $value : $default;
     }
 
-    public function set($key, $value, $ttl = null): bool
+    public function set(string $key, mixed $value, null|int|DateInterval $ttl = null): bool
     {
         $this->validateKey($key);
         $ttl = $this->normalizeTtl($ttl);
@@ -56,7 +53,7 @@ final class ApcuCache implements CacheInterface
         return apcu_store($key, $value, $ttl);
     }
 
-    public function delete($key): bool
+    public function delete(string $key): bool
     {
         $this->validateKey($key);
         return apcu_delete($key);
@@ -67,13 +64,14 @@ final class ApcuCache implements CacheInterface
         return apcu_clear_cache();
     }
 
-    public function getMultiple($keys, $default = null): iterable
+    public function getMultiple(iterable $keys, mixed $default = null): iterable
     {
         $keys = $this->iterableToArray($keys);
         $this->validateKeys($keys);
         $values = array_fill_keys($keys, $default);
 
         if (($valuesFromCache = apcu_fetch($keys)) === false) {
+            /** @var array<string, mixed> $values */
             return $values;
         }
 
@@ -83,10 +81,11 @@ final class ApcuCache implements CacheInterface
             $values[$key] = $valuesFromCache[(string) $key] ?? $value;
         }
 
+        /** @var array<string, mixed> $values */
         return $values;
     }
 
-    public function setMultiple($values, $ttl = null): bool
+    public function setMultiple(iterable $values, null|int|DateInterval $ttl = null): bool
     {
         $ttl = $this->normalizeTtl($ttl);
         $values = $this->iterableToArray($values);
@@ -107,14 +106,14 @@ final class ApcuCache implements CacheInterface
         return true;
     }
 
-    public function deleteMultiple($keys): bool
+    public function deleteMultiple(iterable $keys): bool
     {
         $keys = $this->iterableToArray($keys);
         $this->validateKeys($keys);
         return apcu_delete($keys) === [];
     }
 
-    public function has($key): bool
+    public function has(string $key): bool
     {
         $this->validateKey($key);
         return apcu_exists($key);
@@ -127,7 +126,7 @@ final class ApcuCache implements CacheInterface
      *
      * @return int TTL value as UNIX timestamp.
      */
-    private function normalizeTtl($ttl): int
+    private function normalizeTtl(null|int|string|DateInterval $ttl = null): int
     {
         if ($ttl === null) {
             return self::TTL_INFINITY;
@@ -144,26 +143,19 @@ final class ApcuCache implements CacheInterface
     /**
      * Converts iterable to array. If provided value is not iterable it throws an InvalidArgumentException.
      *
-     * @param mixed $iterable
+     * @param iterable $iterable
      *
      * @return array
      */
-    private function iterableToArray($iterable): array
+    private function iterableToArray(iterable $iterable): array
     {
-        if (!is_iterable($iterable)) {
-            throw new InvalidArgumentException('Iterable is expected, got ' . gettype($iterable));
-        }
-
         /** @psalm-suppress RedundantCast */
         return $iterable instanceof Traversable ? iterator_to_array($iterable) : (array) $iterable;
     }
 
-    /**
-     * @param mixed $key
-     */
-    private function validateKey($key): void
+    private function validateKey(string $key): void
     {
-        if (!is_string($key) || $key === '' || strpbrk($key, '{}()/\@:')) {
+        if ($key === '' || strpbrk($key, '{}()/\@:')) {
             throw new InvalidArgumentException('Invalid key value.');
         }
     }
