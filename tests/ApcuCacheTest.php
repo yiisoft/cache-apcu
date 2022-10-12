@@ -90,7 +90,7 @@ final class ApcuCacheTest extends TestCase
         $this->cache->set($key, $value);
         $valueFromCache = $this->cache->get($key, 'default');
 
-        $this->assertSameExceptObject($value, $valueFromCache);
+        $this->assertEqualsCanonicalizing($value, $valueFromCache);
     }
 
     /**
@@ -106,14 +106,14 @@ final class ApcuCacheTest extends TestCase
         $this->cache->set($key, $value);
         $valueFromCache = $this->cache->get($key, 'default');
 
-        $this->assertSameExceptObject($value, $valueFromCache);
+        $this->assertEqualsCanonicalizing($value, $valueFromCache);
 
         if (is_object($value)) {
             $originalValue = clone $value;
             $valueFromCache->test_field = 'changed';
             $value->test_field = 'changed';
             $valueFromCacheNew = $this->cache->get($key, 'default');
-            $this->assertSameExceptObject($originalValue, $valueFromCacheNew);
+            $this->assertEqualsCanonicalizing($originalValue, $valueFromCacheNew);
         }
     }
 
@@ -131,7 +131,7 @@ final class ApcuCacheTest extends TestCase
 
         $this->assertTrue($this->cache->has($key));
         // check whether exists affects the value
-        $this->assertSameExceptObject($value, $this->cache->get($key));
+        $this->assertEqualsCanonicalizing($value, $this->cache->get($key));
 
         $this->assertTrue($this->cache->has($key));
         $this->assertFalse($this->cache->has('not_exists'));
@@ -154,7 +154,7 @@ final class ApcuCacheTest extends TestCase
     {
         $this->cache->set($key, $value);
 
-        $this->assertSameExceptObject($value, $this->cache->get($key));
+        $this->assertEqualsCanonicalizing($value, $this->cache->get($key));
         $this->assertTrue($this->cache->delete($key));
         $this->assertNull($this->cache->get($key));
     }
@@ -190,7 +190,7 @@ final class ApcuCacheTest extends TestCase
         $this->cache->setMultiple($data, $ttl);
 
         foreach ($data as $key => $value) {
-            $this->assertSameExceptObject($value, $this->cache->get((string) $key));
+            $this->assertEqualsCanonicalizing($value, $this->cache->get((string) $key));
         }
     }
 
@@ -212,12 +212,12 @@ final class ApcuCacheTest extends TestCase
 
         $this->cache->setMultiple($data);
 
-        $this->assertSameExceptObject($data, $this->cache->getMultiple($keys));
+        $this->assertEqualsCanonicalizing($data, $this->cache->getMultiple($keys));
     }
 
     public function testGetMultipleWithKeysNotExist(): void
     {
-        $this->assertSameExceptObject(
+        $this->assertEqualsCanonicalizing(
             ['key-1' => null, 'key-2' => null],
             $this->cache->getMultiple(['key-1', 'key-2']),
         );
@@ -230,13 +230,13 @@ final class ApcuCacheTest extends TestCase
 
         $this->cache->setMultiple($data);
 
-        $this->assertSameExceptObject($data, $this->cache->getMultiple($keys));
+        $this->assertEqualsCanonicalizing($data, $this->cache->getMultiple($keys));
 
         $this->cache->deleteMultiple($keys);
 
         $emptyData = array_map(static fn ($v) => null, $data);
 
-        $this->assertSameExceptObject($emptyData, $this->cache->getMultiple($keys));
+        $this->assertEqualsCanonicalizing($emptyData, $this->cache->getMultiple($keys));
     }
 
     public function testNegativeTtl(): void
@@ -264,7 +264,7 @@ final class ApcuCacheTest extends TestCase
         $result = $method->invokeArgs($this->cache, [$ttl]);
         $method->setAccessible(false);
 
-        $this->assertSameExceptObject($expectedResult, $result);
+        $this->assertEqualsCanonicalizing($expectedResult, $result);
     }
 
     /**
@@ -299,7 +299,7 @@ final class ApcuCacheTest extends TestCase
     {
         $this->cache->setMultiple($iterable);
 
-        $this->assertSameExceptObject($array, $this->cache->getMultiple(array_keys($array)));
+        $this->assertEqualsCanonicalizing($array, $this->cache->getMultiple(array_keys($array)));
     }
 
     public function iterableProvider(): array
@@ -335,10 +335,10 @@ final class ApcuCacheTest extends TestCase
     public function testSetWithDateIntervalTtl(): void
     {
         $this->cache->set('a', 1, new DateInterval('PT1H'));
-        $this->assertSameExceptObject(1, $this->cache->get('a'));
+        $this->assertEqualsCanonicalizing(1, $this->cache->get('a'));
 
         $this->cache->setMultiple(['b' => 2]);
-        $this->assertSameExceptObject(['b' => 2], $this->cache->getMultiple(['b']));
+        $this->assertEqualsCanonicalizing(['b' => 2], $this->cache->getMultiple(['b']));
     }
 
     public function invalidKeyProvider(): array
@@ -412,31 +412,5 @@ final class ApcuCacheTest extends TestCase
         }
 
         return $data;
-    }
-
-    private function assertSameExceptObject(mixed $expected, mixed $actual): void
-    {
-        // Assert for all types.
-        $this->assertEquals($expected, $actual);
-
-        // no more asserts for objects
-        if (is_object($expected)) {
-            return;
-        }
-
-        // Assert same for all types except objects and arrays that can contain objects.
-        if (!is_array($expected)) {
-            $this->assertSame($expected, $actual);
-            return;
-        }
-
-        // Assert same for each element of the array except objects.
-        foreach ($expected as $key => $value) {
-            if (is_object($value)) {
-                $this->assertEquals($expected[$key], $actual[$key]);
-            } else {
-                $this->assertSame($expected[$key], $actual[$key]);
-            }
-        }
     }
 }
