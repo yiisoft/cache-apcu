@@ -19,7 +19,6 @@ use function array_keys;
 use function array_map;
 use function extension_loaded;
 use function ini_get;
-use function is_array;
 use function is_object;
 
 final class ApcuCacheTest extends TestCase
