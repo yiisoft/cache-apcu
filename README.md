@@ -30,7 +30,7 @@ centralized thick application (e.g. one server, no dedicated load balancers, etc
 
 The package could be installed with composer:
 
-```
+```shell
 composer require yiisoft/cache-apcu --prefer-dist
 ```
 
@@ -38,7 +38,6 @@ composer require yiisoft/cache-apcu --prefer-dist
 
 The package does not contain any additional functionality for interacting with the cache,
 except those defined in the [PSR-16](https://www.php-fig.org/psr/psr-16/) interface.
-
 
 ```php
 $cache = new \Yiisoft\Cache\Apcu\ApcuCache();
