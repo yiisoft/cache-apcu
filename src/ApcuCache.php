@@ -24,7 +24,7 @@ use function strpbrk;
 /**
  * ApcuCache provides APCu caching in terms of an application component.
  *
- * To use this application component, the [APCu PHP extension](http://www.php.net/apcu) must be loaded.
+ * To use this application component, the [APCu PHP extension](https://www.php.net/apcu) must be loaded.
  * In order to enable APCu for CLI you should add "apc.enable_cli = 1" to your php.ini.
  *
  * See {@see \Psr\SimpleCache\CacheInterface} for common cache operations that ApcCache supports.
