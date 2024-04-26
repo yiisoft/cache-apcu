@@ -31,7 +31,7 @@ centralized thick application (e.g. one server, no dedicated load balancers, etc
 The package could be installed with composer:
 
 ```shell
-composer require yiisoft/cache-apcu --prefer-dist
+composer require yiisoft/cache-apcu
 ```
 
 ## General usage
@@ -78,10 +78,8 @@ This package can be used as a cache handler for the [Yii Caching Library](https:
 
 - [Internals](docs/internals.md)
 
-## Support
-
-If you need help or have a question, the [Yii Forum](https://forum.yiiframework.com/c/yii-3-0/63) is a good place for that.
-You may also check out other [Yii Community Resources](https://www.yiiframework.com/community).
+If you need help or have a question, the [Yii Forum](https://forum.yiiframework.com/c/yii-3-0/63) is a good place for 
+that. You may also check out other [Yii Community Resources](https://www.yiiframework.com/community).
 
 ## Support the project
 
