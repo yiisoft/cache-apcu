@@ -28,7 +28,7 @@ centralized thick application (e.g. one server, no dedicated load balancers, etc
 
 ## Installation
 
-The package could be installed with composer:
+The package could be installed with [composer](https://getcomposer.org/download/)
 
 ```shell
 composer require yiisoft/cache-apcu
