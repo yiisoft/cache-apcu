@@ -73,6 +73,32 @@ To work with values in a more efficient manner, batch operations should be used:
 
 This package can be used as a cache handler for the [Yii Caching Library](https://github.com/yiisoft/cache).
 
+## Cleaning up APCu cache
+
+Typically the web processes are separate from CLI so these do not share the same cache instance. Thus, special
+handling in the web is needed for the case. First, a web-acessible script `apc_clear.php` like the following:
+
+```php
+<?php
+if (in_array(@$_SERVER['REMOTE_ADDR'], ['127.0.0.1', '::1'])) {
+  apc_clear_cache();
+  apc_clear_cache('user');
+  apc_clear_cache('opcode');
+  echo json_encode(['success' => true]);
+}
+```
+
+And finally, you need some code that calls it:
+
+```php
+$url = 'http://localhost/apc_clear.php';
+$result = json_decode(file_get_contents($url));
+
+if (empty($result['success'])) {
+  echo "There was an error cleaning up APCu cache.\n".
+}
+```
+
 ## Documentation
 
 - [Internals](docs/internals.md)
