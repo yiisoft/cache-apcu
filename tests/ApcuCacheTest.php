@@ -26,11 +26,6 @@ final class ApcuCacheTest extends TestCase
 {
     private ApcuCache $cache;
 
-    public function setUp(): void
-    {
-        $this->cache = new ApcuCache();
-    }
-
     public static function setUpBeforeClass(): void
     {
         if (!extension_loaded('apcu')) {
@@ -40,6 +35,11 @@ final class ApcuCacheTest extends TestCase
         if (!ini_get('apc.enable_cli')) {
             self::markTestSkipped('APC is installed but not enabled. Enable with "apc.enable_cli=1" from php.ini. Skipping.');
         }
+    }
+
+    public function setUp(): void
+    {
+        $this->cache = new ApcuCache();
     }
 
     public function dataProvider(): array
@@ -234,7 +234,7 @@ final class ApcuCacheTest extends TestCase
 
         $this->cache->deleteMultiple($keys);
 
-        $emptyData = array_map(static fn ($v) => null, $data);
+        $emptyData = array_map(static fn($v) => null, $data);
 
         $this->assertSameExceptObject($emptyData, $this->cache->getMultiple($keys));
     }
@@ -315,7 +315,7 @@ final class ApcuCacheTest extends TestCase
             ],
             'IteratorAggregate' => [
                 ['a' => 1, 'b' => 2,],
-                new class () implements IteratorAggregate {
+                new class implements IteratorAggregate {
                     public function getIterator(): ArrayIterator
                     {
                         return new ArrayIterator(['a' => 1, 'b' => 2,]);
