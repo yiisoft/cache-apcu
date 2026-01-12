@@ -27,7 +27,7 @@ use function strpbrk;
  * To use this application component, the [APCu PHP extension](https://www.php.net/apcu) must be loaded.
  * In order to enable APCu for CLI you should add "apc.enable_cli = 1" to your php.ini.
  *
- * See {@see \Psr\SimpleCache\CacheInterface} for common cache operations that ApcCache supports.
+ * See {@see CacheInterface} for common cache operations that ApcCache supports.
  */
 final class ApcuCache implements CacheInterface
 {
@@ -41,7 +41,7 @@ final class ApcuCache implements CacheInterface
         return $success ? $value : $default;
     }
 
-    public function set(string $key, mixed $value, null|int|DateInterval $ttl = null): bool
+    public function set(string $key, mixed $value, int|DateInterval|null $ttl = null): bool
     {
         $this->validateKey($key);
         $ttl = $this->normalizeTtl($ttl);
@@ -85,7 +85,7 @@ final class ApcuCache implements CacheInterface
         return $values;
     }
 
-    public function setMultiple(iterable $values, null|int|DateInterval $ttl = null): bool
+    public function setMultiple(iterable $values, int|DateInterval|null $ttl = null): bool
     {
         $ttl = $this->normalizeTtl($ttl);
         $values = $this->iterableToArray($values);
@@ -126,7 +126,7 @@ final class ApcuCache implements CacheInterface
      *
      * @return int TTL value as UNIX timestamp.
      */
-    private function normalizeTtl(null|int|string|DateInterval $ttl = null): int
+    private function normalizeTtl(int|string|DateInterval|null $ttl = null): int
     {
         if ($ttl === null) {
             return self::TTL_INFINITY;
