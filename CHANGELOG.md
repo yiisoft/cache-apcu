@@ -4,6 +4,7 @@
 
 - Enh #46: Explicitly import classes in "use" section (@mspirkov)
 - Enh #47: Remove unnecessary files from Composer package (@mspirkov)
+- Enh #57: Use strict comparison for `strpbrk()` result in key validation (@vjik)
 
 ## 1.1.0 April 24, 2024
 
