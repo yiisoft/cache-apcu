@@ -41,7 +41,7 @@
         "rector/rector": "^2.3.0",
         "shipmonk/composer-dependency-analyser": "^1.8",
         "spatie/phpunit-watcher": "^1.23",
-        "vimeo/psalm": "^4.30 || ^5.26.1 || ^6.16.1"
+        "vimeo/psalm": "^4.30 || ^5.26.1 || ^6.20.5"
     },
     "provide": {
         "psr/simple-cache-implementation": "1.0.0"
